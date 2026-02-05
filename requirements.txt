@@ -1,2 +1,6 @@
 langchain
 langchain-openai
+python-dotenv
+black
+isort
+langchain-ollama
