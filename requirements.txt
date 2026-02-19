@@ -6,3 +6,12 @@ isort
 langchain-ollama
 langchain-tavily
 tavily-python
+langchainhub
+langchain-core
+langchain-community
+
+
+
+
+
+# langchain langchain-openai python-dotenv black isort langchain-ollama langchain-tavily tavily-python langchainhub langchain-core langchain-community
