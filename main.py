@@ -7,6 +7,9 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from operator import itemgetter
 
 
 if __name__ == '__main__':
@@ -51,7 +54,47 @@ if __name__ == '__main__':
         # Step 3: Format the prompt with context and question and Invoke LLM with the formatted messages
         response=llm.invoke([HumanMessage(content=prompt_template.format(context=context,question=query))])
         return response.content
+    
+    #=============================================
+    #IMPLEMENTATION 2: WITH LCEL - BETTER APPROACH
+    #=============================================
+    def create_retrieval_chain_with_lcel():
+        """
+        Create a retrieval chain using LCEL (LangChain Expression Language).
+        Returns a chain that can be invoked with {"question": " ... "}
+        Advantages over non-LCEL approach:
+        - Declarative and composable: Easy to chain operations with pipe operator (|)
+        - Built-in streaming: chain.stream() works out of the box
+        - Built-in async: chain.ainvoke() and chain.astream() available
+        - Batch processing: chain.batch() for multiple inputs
+        - Type safety: Better integration with LangChain's type system
+        - Less code: More concise and readable
+        - Reusable: Chain can be saved, shared, and composed with other chains
+        - Better debugging: LangChain provides better observability tools
+        """
+        
+        # the format_docs is a function
+        # it doesnt have the langchain Runnable 
+        # however langchain automatically converts it to a Runnable
 
+        # Also now the prompt template needs some parameters
+        # So we need to use RunnablePassthrough to pass the parameters
+        # question and context
+    
+        retrieval_chain=(
+            RunnablePassthrough.assign(
+                context=itemgetter("question") | retriever | format_docs
+            )
+            |
+            prompt_template
+            |
+            llm
+            |
+            StrOutputParser()
+        )
+        return retrieval_chain
+
+        
 
 
 
@@ -79,6 +122,15 @@ if __name__ == '__main__':
         result_rag_no_lcel = retrieval_chain_without_lcel(query)
         print("\nAnswer:")
         print(result_rag_no_lcel)
-
+    #=========================================================
+    # Option 2: Use RAG with LCEL ( WITH langchain )
+    # ========================================================
+        print("\n" + "=" * 70)
+        print("IMPLEMENTATION 2: RAG with LCEL (Automatic)")
+        print("=" * 70)
+    chain_with_lcel=create_retrieval_chain_with_lcel()
+    result_rag_with_lcel=chain_with_lcel.invoke({"question":query}) # the input_dict
+    print("\nAnswer:")
+    print(result_rag_with_lcel)
         
 
